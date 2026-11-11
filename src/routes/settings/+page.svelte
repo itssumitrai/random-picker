@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/env';
+	import { resolve } from '$app/paths';
 	import {
 		ArrowLeft,
 		Download,
@@ -31,7 +32,7 @@
 	];
 
 	const lastCategoryId = browser ? sessionStorage.getItem('spindle.lastCategory') : null;
-	const backHref = lastCategoryId ? `/?c=${encodeURIComponent(lastCategoryId)}` : '/';
+	const backHref = resolve(lastCategoryId ? `/?c=${encodeURIComponent(lastCategoryId)}` : '/');
 
 	let expandedId = $state<string | null>(null);
 	let fileInput: HTMLInputElement | undefined;

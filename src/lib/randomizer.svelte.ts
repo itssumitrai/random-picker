@@ -215,6 +215,8 @@ export function parseWheelData(input: unknown): WheelCategory[] | null {
 
 	if (!rawCategories) return null;
 
+	// Plain local set used while parsing an import; it is never reactive state.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
 	const usedCategoryIds = new Set<string>();
 	const categories: WheelCategory[] = [];
 
@@ -249,6 +251,8 @@ export function createExport(categories: WheelCategory[]): string {
 		{
 			app: 'spindle',
 			version: 1,
+			// A timestamp in the exported file, not reactive state.
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			exportedAt: new Date().toISOString(),
 			categories
 		},
