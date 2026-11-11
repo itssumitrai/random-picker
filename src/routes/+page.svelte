@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/env';
 	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Dices, LoaderCircle } from '@lucide/svelte';
 	import ResultModal from '#lib/components/ResultModal.svelte';
@@ -43,7 +44,7 @@
 		}
 
 		if (page.url.searchParams.get('c') !== category.id) {
-			replaceState(`/?c=${category.id}`, {});
+			replaceState(resolve(`/?c=${category.id}`), {});
 		}
 	});
 
@@ -111,7 +112,7 @@
 			<div class="empty-icon" aria-hidden="true">🎡</div>
 			<h1>No wheels yet</h1>
 			<p>Create your first wheel and start letting chance decide.</p>
-			<a class="btn btn-primary" href="/settings">Open settings</a>
+			<a class="btn btn-primary" href={resolve('/settings')}>Open settings</a>
 		</div>
 	</section>
 {:else}
@@ -167,7 +168,7 @@
 					{:else}
 						Add at least two options to make it a real choice.
 					{/if}
-					<a class="text-link" href="/settings">Edit wheel</a>
+					<a class="text-link" href={resolve('/settings')}>Edit wheel</a>
 				</p>
 			{:else}
 				<p class="hint">

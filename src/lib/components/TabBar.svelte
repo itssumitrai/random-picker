@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { Plus } from '@lucide/svelte';
 	import { tick } from 'svelte';
 	import type { WheelCategory } from '#lib/randomizer.svelte';
@@ -42,7 +43,7 @@
 	<div class="track" bind:this={track}>
 		{#each categories as category (category.id)}
 			<a
-				href={`/?c=${category.id}`}
+				href={resolve(`/?c=${category.id}`)}
 				class="tab"
 				class:active={category.id === selectedId}
 				aria-current={category.id === selectedId ? 'page' : undefined}
@@ -51,7 +52,7 @@
 				<span class="name">{category.name.trim() || 'Untitled'}</span>
 			</a>
 		{/each}
-		<a class="tab add" href="/settings" aria-label="Add or edit wheels" title="Add or edit wheels">
+		<a class="tab add" href={resolve('/settings')} aria-label="Add or edit wheels" title="Add or edit wheels">
 			<Plus size={16} strokeWidth={2.2} />
 		</a>
 	</div>

@@ -46,6 +46,11 @@ Open the printed URL, usually <http://localhost:5173>.
 | `npm run build`   | Build the static site into `build/`       |
 | `npm run preview` | Preview the production build locally      |
 | `npm run check`   | Run `svelte-check` for TypeScript errors  |
+| `npm run lint`    | Lint Svelte and TypeScript with ESLint    |
+| `npm run test`    | Run the unit tests with Vitest            |
+
+Every push and pull request runs the same checks in GitHub Actions — lint, type
+checking, unit tests, and a production build (see `.github/workflows/ci.yml`).
 
 ## How data is stored
 

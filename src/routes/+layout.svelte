@@ -3,6 +3,7 @@
 	import '../app.css';
 
 	import { browser } from '$app/env';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Moon, Settings, Sun } from '@lucide/svelte';
 	import Logo from '#lib/components/Logo.svelte';
@@ -32,7 +33,7 @@
 
 <header class="site-header">
 	<div class="header-inner">
-		<a class="brand" href="/" aria-label="Spindle home">
+		<a class="brand" href={resolve('/')} aria-label="Spindle home">
 			<Logo size={26} />
 			<span>Spindle</span>
 		</a>
@@ -54,7 +55,7 @@
 			<a
 				class="icon-btn"
 				class:is-active={isSettings}
-				href="/settings"
+				href={resolve('/settings')}
 				aria-label="Settings"
 				title="Settings"
 			>
