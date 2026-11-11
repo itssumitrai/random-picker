@@ -38,7 +38,7 @@
 
 	--header-height: 64px;
 	--page-width: 1080px;
-	--wheel-size: clamp(280px, 78vw, 540px);
+	--wheel-size: min(clamp(270px, 70vw, 430px), 50vh);
 
 	color-scheme: light;
 }

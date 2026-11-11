@@ -125,10 +125,6 @@
 				{category.name.trim() || 'Untitled wheel'}
 			</p>
 			<h1>{category.prompt.trim() || "What's the pick?"}</h1>
-			<p class="sub">
-				{playableOptions.length}
-				{playableOptions.length === 1 ? 'option' : 'options'} on the wheel
-			</p>
 		</div>
 
 		<div class="wheel-wrap">
@@ -204,7 +200,7 @@
 	}
 
 	.stage-head {
-		margin-top: 28px;
+		margin-top: 20px;
 		text-align: center;
 	}
 
@@ -230,26 +226,20 @@
 
 	h1 {
 		max-width: 760px;
-		margin: 14px auto 0;
-		font-size: clamp(30px, 5.2vw, 48px);
+		margin: 12px auto 0;
+		font-size: clamp(28px, 4.8vw, 44px);
 		font-weight: 800;
 		letter-spacing: -0.055em;
 	}
 
-	.sub {
-		margin-top: 10px;
-		color: var(--text-tertiary);
-		font-size: 13.5px;
-	}
-
 	.wheel-wrap {
-		margin-top: 34px;
+		margin-top: 18px;
 		display: flex;
 		justify-content: center;
 	}
 
 	.spin-area {
-		margin-top: 30px;
+		margin-top: 18px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -392,15 +382,15 @@
 
 	@media (max-width: 640px) {
 		.stage-head {
-			margin-top: 22px;
+			margin-top: 16px;
 		}
 
 		.wheel-wrap {
-			margin-top: 28px;
+			margin-top: 18px;
 		}
 
 		.spin-area {
-			margin-top: 24px;
+			margin-top: 18px;
 		}
 
 		.spin-btn {
