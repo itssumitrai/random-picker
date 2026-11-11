@@ -125,3 +125,25 @@ src/
     +page.svelte                Wheel page
     settings/+page.svelte       Appearance, data, and wheel management
 ```
+
+## Live demo
+
+**[https://itssumitrai.github.io/random-picker/](https://itssumitrai.github.io/random-picker/)**
+
+### GitHub Pages deployment
+
+The app is published to GitHub Pages at the URL above. Because GitHub Pages project sites live
+under a sub-path (`/random-picker`), the production build sets `paths.base` via the `BASE_PATH`
+environment variable:
+
+```sh
+BASE_PATH=/random-picker npm run build
+```
+
+Local development (`npm run dev`) and plain `npm run build` leave `BASE_PATH` unset, so the app
+continues to work at the root path `/`.
+
+The deploy workflow (`.github/workflows/deploy.yml`) runs on every push to `main` and can also be
+triggered manually. It builds with the base path, copies `build/index.html` → `build/404.html` so
+direct deep-link loads (e.g. `/random-picker/settings`) are handled by the SPA shell on GitHub
+Pages, then publishes via the official `actions/deploy-pages` action.
