@@ -1,5 +1,12 @@
 import { browser } from '$app/env';
-import { loadData, saveData, type StorageSource } from '#lib/storage';
+import { remoteEnabled } from '#lib/remote';
+import {
+	hasUnsyncedChanges,
+	loadData,
+	pullShared,
+	saveData,
+	type StorageSource
+} from '#lib/storage';
 
 export const MAX_OPTIONS = 30;
 export const MAX_CATEGORIES = 40;
@@ -283,6 +290,7 @@ class RandomizerStore {
 
 	#initPromise: Promise<void> | null = null;
 	#writeChain: Promise<void> = Promise.resolve();
+	#pendingWrites = 0;
 
 	init(): Promise<void> {
 		if (!browser || this.ready) return Promise.resolve();
@@ -320,13 +328,47 @@ class RandomizerStore {
 			categories: $state.snapshot(this.categories)
 		};
 
+		this.#pendingWrites += 1;
 		this.#writeChain = this.#writeChain
 			.then(async () => {
-				this.storage = await saveData(payload, this.storage);
+				this.storage = await saveData(payload);
 			})
 			.catch(() => {
 				this.storage = 'memory';
+			})
+			.finally(() => {
+				this.#pendingWrites -= 1;
 			});
+	}
+
+	/**
+	 * Syncs with the shared database: pushes edits made while it was unreachable,
+	 * otherwise picks up changes made on other devices. No-op without one.
+	 */
+	async refresh(): Promise<void> {
+		if (!remoteEnabled || !this.ready || this.#pendingWrites > 0) return;
+
+		if (hasUnsyncedChanges()) {
+			this.persist();
+			return;
+		}
+
+		try {
+			const data = await pullShared();
+			this.storage = 'server';
+			// Local edits made while the request was in flight win.
+			if (this.#pendingWrites > 0) return;
+
+			const parsed = data === undefined ? null : parseWheelData(data);
+			if (
+				parsed &&
+				JSON.stringify(parsed) !== JSON.stringify($state.snapshot(this.categories))
+			) {
+				this.categories = parsed;
+			}
+		} catch {
+			this.storage = 'offline';
+		}
 	}
 
 	getCategory(id: string | null | undefined): WheelCategory | undefined {

@@ -3,8 +3,8 @@
 **Let chance decide.** A fast, friendly randomizer wheel that runs entirely in your browser.
 
 Spindle gives every decision its own wheel. Spin for a movie, a meal, a weekend plan, or anything
-else you can think of. All wheels live in your browser, and you can export a backup whenever you
-want to move them somewhere else.
+else you can think of. Wheels can be shared through a small self-hosted database, so every device
+sees the same ones, or kept entirely in your browser. You can export a backup at any time.
 
 ## Features
 
@@ -15,7 +15,8 @@ want to move them somewhere else.
 - **Fully editable** — rename wheels, change prompts, emoji, accent colors, and options. Create and
   reorder as many wheels as you like.
 - **Light, dark, or system theme** — follows your device by default, with a one-tap override.
-- **Local-first data** — saved to IndexedDB, with a localStorage fallback when IndexedDB is blocked.
+- **Shared or local data** — a self-hosted Postgres database (Docker) keeps every device in sync,
+  with IndexedDB as an offline cache. Without one, data stays in the browser.
 - **Backup and restore** — export everything to a JSON file and import it on another device.
 - **Responsive** — designed for phones first and scaled up to desktop.
 
@@ -54,7 +55,33 @@ checking, unit tests, and a production build (see `.github/workflows/ci.yml`).
 
 ## How data is stored
 
-Spindle keeps everything on your device:
+The build decides where wheels are stored, through the `SYNC_API_URL` variable (see `src/env.ts`).
+
+### Shared database (`SYNC_API_URL` set)
+
+The mini-pc deployment builds with `SYNC_API_URL=/api`. Every browser that opens it reads and
+writes one shared copy:
+
+```text
+browser ──HTTP──▶ serve.py :8080 ──/api/*──▶ PostgREST (127.0.0.1:3000) ──▶ Postgres (Docker network only)
+```
+
+- The stack is defined in `server/compose.yaml`. The table `api.app_state` holds the wheels as one
+  JSON document under key `wheels`.
+- The server copy wins on load. A copy is cached in IndexedDB, so the app keeps working if the
+  server is down. Edits made while it's down are pushed once it's back.
+- The first browser to open an empty database uploads its existing wheels.
+- Saves replace the whole document (last write wins). Switching back to the tab pulls the latest
+  version.
+- There's no login. Anyone who can reach the site can edit, so keep it on a trusted network.
+
+Database passwords are generated on the server into `server/.env` and are never committed. Copy
+`server/.env.example` to run the stack yourself. Agent and contributor rules for the database are in
+[`AGENTS.md`](AGENTS.md).
+
+### Browser only (`SYNC_API_URL` unset)
+
+This is the default for `npm run dev`, a plain `npm run build`, and GitHub Pages:
 
 1. **IndexedDB** (database `spindle`, object store `state`, key `wheels`) is used first.
 2. **localStorage** (`spindle.data.v1`) is used automatically if IndexedDB is unavailable, for
@@ -96,12 +123,23 @@ Import files are limited to 2 MB, 40 wheels, and 30 options per wheel.
 ## Deploying
 
 `npm run build` produces a static site in `build/`. Upload that folder to any static host
-(Netlify, Vercel, GitHub Pages, Cloudflare Pages, S3, nginx…).
+(Netlify, Vercel, GitHub Pages, Cloudflare Pages, S3, nginx…). Set `SYNC_API_URL` at build time to
+connect it to the shared database.
 
 The adapter is configured with `fallback: 'index.html'`, so client-side routes such as `/settings`
 work on hosts that serve `index.html` for unknown paths. The build prints an
 `adapter_fallback_overwrites` warning because the fallback replaces the prerendered shell; this is
 expected.
+
+### mini-pc (home LAN, shared database)
+
+```sh
+.claude/skills/deploy-mini-pc/scripts/deploy.sh
+```
+
+Builds with `SYNC_API_URL=/api`, starts the Docker database stack (installing Docker on first run),
+and serves the site at `http://192.168.68.139:8080/`. Details, backups and troubleshooting are in
+`.claude/skills/deploy-mini-pc/SKILL.md`.
 
 ## Project layout
 
@@ -118,12 +156,18 @@ src/
       Wheel.svelte              Canvas wheel and spin physics
     palette.ts                  Wheel color palette helpers
     randomizer.svelte.ts        Data model, validation, store, import/export
-    storage.ts                  IndexedDB and localStorage persistence
+    remote.ts                   Shared-database (PostgREST) client
+    storage.ts                  Local cache and sync rules
     theme.svelte.ts             Theme preference handling
+  env.ts                        Build-time env vars (SYNC_API_URL)
   routes/
     +layout.svelte              App shell, header, boot state
     +page.svelte                Wheel page
     settings/+page.svelte       Appearance, data, and wheel management
+server/
+  compose.yaml                  Postgres + PostgREST (Docker Compose)
+  db/01-schema.sh               Schema and roles, run on first start
+  .env.example                  Placeholder secrets (real .env is never committed)
 ```
 
 ## Live demo
@@ -147,3 +191,7 @@ The deploy workflow (`.github/workflows/deploy.yml`) runs on every push to `main
 triggered manually. It builds with the base path, copies `build/index.html` → `build/404.html` so
 direct deep-link loads (e.g. `/random-picker/settings`) are handled by the SPA shell on GitHub
 Pages, then publishes via the official `actions/deploy-pages` action.
+
+The Pages copy doesn't use the shared database. The database lives on the home LAN, and an HTTPS
+page can't call a plain-HTTP LAN address, so wheels on the Pages site stay in your browser. Use
+Settings → Export / Import to move them.
