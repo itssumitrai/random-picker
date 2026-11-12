@@ -202,10 +202,15 @@
 				</div>
 			</div>
 
-			<p class="storage-note" class:warn={randomizer.storage === 'memory'}>
+			<p
+				class="storage-note"
+				class:warn={randomizer.storage === 'memory' || randomizer.storage === 'offline'}
+			>
 				<HardDrive size={15} strokeWidth={2} />
 				{#if randomizer.storage === 'memory'}
 					This browser is blocking storage. Export a backup before closing.
+				{:else if randomizer.storage === 'offline'}
+					Can't reach the shared database. Changes stay in this browser and sync when it's back.
 				{:else}
 					Saved automatically in {storageLabel(randomizer.storage)}.
 				{/if}

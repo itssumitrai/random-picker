@@ -17,9 +17,16 @@
 		randomizer.init();
 	}
 
+	// Pick up edits made on other devices when the user comes back to this tab.
+	function onVisibilityChange(): void {
+		if (document.visibilityState === 'visible') randomizer.refresh();
+	}
+
 	const isSettings = $derived(page.url.pathname.startsWith('/settings'));
 	const title = $derived(isSettings ? 'Settings · Spindle' : 'Spindle — Let chance decide');
 </script>
+
+<svelte:document onvisibilitychange={onVisibilityChange} />
 
 <svelte:head>
 	<title>{title}</title>

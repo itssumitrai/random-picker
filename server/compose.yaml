@@ -1,0 +1,44 @@
+# Spindle's shared database: Postgres plus PostgREST (a REST API generated from the schema).
+# Runs on the mini-pc; see .claude/skills/deploy-mini-pc/SKILL.md and AGENTS.md.
+#
+# Secrets come from server/.env, which is generated on the host and never committed.
+# Copy .env.example to .env to run this locally.
+name: spindle
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: spindle
+      POSTGRES_USER: spindle
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in server/.env}
+      # Read by db/01-schema.sh when the database is first created.
+      AUTHENTICATOR_PASSWORD: ${AUTHENTICATOR_PASSWORD:?set AUTHENTICATOR_PASSWORD in server/.env}
+    volumes:
+      - db-data:/var/lib/postgresql
+      - ./db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U spindle -d spindle']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # No published ports: only the api container can reach Postgres.
+
+  api:
+    image: postgrest/postgrest:v16.5
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${AUTHENTICATOR_PASSWORD}@db:5432/spindle
+      PGRST_DB_SCHEMAS: api
+      PGRST_DB_ANON_ROLE: web_anon
+      PGRST_OPENAPI_MODE: disabled
+    # Loopback only. The site server proxies /api/* to this port, so the LAN never talks to it directly.
+    ports:
+      - '127.0.0.1:${API_PORT:-3000}:3000'
+
+volumes:
+  db-data:
